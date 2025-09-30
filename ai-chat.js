@@ -62,7 +62,6 @@ TONE: Journalist to journalist. Direct, precise, curious. Not therapeutic jargon
 
 // Chat state
 let chatHistory = [];
-let isOpen = false;
 
 // Initialize chat on page load
 function initAIChat() {
@@ -75,16 +74,9 @@ function initAIChat() {
 function createChatUI() {
     const chatHTML = `
         <div id="ai-chat-container" class="ai-chat-container">
-            <button id="ai-chat-toggle" class="ai-chat-toggle" aria-label="Toggle AI chat">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-            </button>
-            
-            <div id="ai-chat-window" class="ai-chat-window" style="display: none;">
+            <div id="ai-chat-window" class="ai-chat-window">
                 <div class="ai-chat-header">
-                    <h3>Recovery Dialogue</h3>
-                    <button id="ai-chat-close" class="ai-chat-close" aria-label="Close chat">×</button>
+                    <h3>Ask Anything</h3>
                 </div>
                 
                 <div id="ai-chat-messages" class="ai-chat-messages">
@@ -111,13 +103,9 @@ function createChatUI() {
 
 // Attach event listeners
 function attachEventListeners() {
-    const toggle = document.getElementById('ai-chat-toggle');
-    const close = document.getElementById('ai-chat-close');
     const send = document.getElementById('ai-chat-send');
     const input = document.getElementById('ai-chat-input');
     
-    toggle.addEventListener('click', toggleChat);
-    close.addEventListener('click', toggleChat);
     send.addEventListener('click', sendMessage);
     
     input.addEventListener('keydown', (e) => {
@@ -126,22 +114,6 @@ function attachEventListeners() {
             sendMessage();
         }
     });
-}
-
-// Toggle chat window
-function toggleChat() {
-    isOpen = !isOpen;
-    const window = document.getElementById('ai-chat-window');
-    const toggle = document.getElementById('ai-chat-toggle');
-    
-    if (isOpen) {
-        window.style.display = 'flex';
-        toggle.style.display = 'none';
-        document.getElementById('ai-chat-input').focus();
-    } else {
-        window.style.display = 'none';
-        toggle.style.display = 'flex';
-    }
 }
 
 // Send message
