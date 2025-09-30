@@ -75,6 +75,7 @@ function createChatUI() {
     const chatHTML = `
         <div id="ai-chat-container" class="ai-chat-container">
             <div id="ai-chat-window" class="ai-chat-window">
+                <div id="ai-chat-resize-handle" class="ai-chat-resize-handle" aria-label="Drag to resize"></div>
                 <div class="ai-chat-header">
                     <h3>Ask Anything</h3>
                 </div>
@@ -105,6 +106,8 @@ function createChatUI() {
 function attachEventListeners() {
     const send = document.getElementById('ai-chat-send');
     const input = document.getElementById('ai-chat-input');
+    const resizeHandle = document.getElementById('ai-chat-resize-handle');
+    const chatWindow = document.getElementById('ai-chat-window');
     
     send.addEventListener('click', sendMessage);
     
@@ -114,6 +117,48 @@ function attachEventListeners() {
             sendMessage();
         }
     });
+    
+    // Resize functionality
+    let isResizing = false;
+    let startY = 0;
+    let startHeight = 0;
+    
+    resizeHandle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startY = e.clientY;
+        startHeight = chatWindow.offsetHeight;
+        document.body.style.cursor = 'ns-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        
+        const deltaY = startY - e.clientY;
+        const newHeight = startHeight + deltaY;
+        const minHeight = 280;
+        const maxHeight = window.innerHeight * 0.8;
+        
+        if (newHeight >= minHeight && newHeight <= maxHeight) {
+            chatWindow.style.height = `${newHeight}px`;
+            localStorage.setItem('aiChatHeight', newHeight);
+        }
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+    });
+    
+    // Restore saved height
+    const savedHeight = localStorage.getItem('aiChatHeight');
+    if (savedHeight) {
+        chatWindow.style.height = `${savedHeight}px`;
+    }
 }
 
 // Send message
