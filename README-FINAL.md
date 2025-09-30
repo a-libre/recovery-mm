@@ -11,6 +11,22 @@ This is a private, single-page reading experience for Michael Montgomery with:
 
 ---
 
+## Setup (First Time Only)
+
+1. **Copy the config file:**
+   ```bash
+   cp config.example.js config.js
+   ```
+
+2. **Add your Groq API key** to `config.js`:
+   ```javascript
+   const CONFIG = {
+       GROQ_API_KEY: "your_actual_groq_api_key_here"
+   };
+   ```
+
+3. **Done!** The `config.js` file is gitignored and won't be committed.
+
 ## How to Use
 
 ### Main Page
