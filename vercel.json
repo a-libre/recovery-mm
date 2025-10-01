@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/ai/chat", "destination": "/api/chat" }
+  ]
+}
+
