@@ -1,9 +1,8 @@
 // AI Chat Module with Groq Integration
 // Context from Michael Montgomery's recovery sessions
 
-// API key loaded from config.js (not committed to git)
-const GROQ_API_KEY = typeof CONFIG !== 'undefined' ? CONFIG.GROQ_API_KEY : null;
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+// Chat endpoint - proxied through local server to avoid CORS issues
+const CHAT_API_URL = "/ai/chat";
 
 // System prompt with context from all sessions
 const SYSTEM_PROMPT = `You are a thoughtful recovery coach speaking directly to Michael Montgomery, a 62-year-old investigative journalist in San Francisco. You're warm but direct, precise but not clinical. You speak to him like an intelligent colleague, not a patient.
@@ -179,27 +178,17 @@ async function sendMessage() {
     const typingId = addTypingIndicator();
     
     try {
-        // Check if API key is configured
-        if (!GROQ_API_KEY) {
-            throw new Error('API key not configured. Copy config.example.js to config.js and add your Groq API key.');
-        }
-        
-        // Call Groq API
-        const response = await fetch(GROQ_API_URL, {
+        // Call chat API through local server proxy
+        const response = await fetch(CHAT_API_URL, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${GROQ_API_KEY}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'llama-3.3-70b-versatile',
                 messages: [
                     { role: 'system', content: SYSTEM_PROMPT },
                     ...chatHistory
-                ],
-                temperature: 0.7,
-                max_tokens: 1024,
-                stream: false
+                ]
             })
         });
         

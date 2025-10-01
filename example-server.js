@@ -125,8 +125,84 @@ Format your response as JSON:
     }
 });
 
+// Chat endpoint for AI chat feature
+app.post('/ai/chat', async (req, res) => {
+    try {
+        const { messages } = req.body;
+        
+        if (!messages || !Array.isArray(messages)) {
+            return res.status(400).json({ error: 'Invalid request: messages array required' });
+        }
+
+        // If using Groq API with key from config
+        if (process.env.GROQ_API_KEY) {
+            const fetch = (await import('node-fetch')).default;
+            
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: messages,
+                    temperature: 0.7,
+                    max_tokens: 1024
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Groq API error:', errorText);
+                throw new Error(`Groq API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            res.json(data);
+        }
+        // Fallback to OpenAI if available
+        else if (process.env.OPENAI_API_KEY) {
+            const OpenAI = require('openai');
+            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+            
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4",
+                messages: messages,
+                temperature: 0.7,
+                max_tokens: 1024
+            });
+            
+            res.json({
+                choices: [{
+                    message: {
+                        content: completion.choices[0].message.content
+                    }
+                }]
+            });
+        }
+        // Mock response if no API keys
+        else {
+            res.json({
+                choices: [{
+                    message: {
+                        content: "I'm currently running in demo mode without an API key. To enable AI chat, please add your GROQ_API_KEY or OPENAI_API_KEY to the .env file."
+                    }
+                }]
+            });
+        }
+        
+    } catch (error) {
+        console.error('Chat error:', error);
+        res.status(500).json({ 
+            error: 'Chat request failed',
+            message: error.message 
+        });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`\n✨ Recovery Reflections Server`);
     console.log(`📍 http://localhost:${PORT}`);
-    console.log(`🤖 AI: ${process.env.OPENAI_API_KEY ? 'OpenAI' : process.env.ANTHROPIC_API_KEY ? 'Anthropic' : 'Mock'}\n`);
+    console.log(`🤖 AI: ${process.env.GROQ_API_KEY ? 'Groq' : process.env.OPENAI_API_KEY ? 'OpenAI' : process.env.ANTHROPIC_API_KEY ? 'Anthropic' : 'Mock'}\n`);
 });

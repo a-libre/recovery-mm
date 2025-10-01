@@ -139,8 +139,78 @@ Format your response as JSON:
             'message': str(e)
         }), 500
 
+@app.route('/ai/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.json
+        messages = data.get('messages', [])
+        
+        if not messages:
+            return jsonify({'error': 'Invalid request: messages array required'}), 400
+
+        # If using Groq API
+        if os.getenv('GROQ_API_KEY'):
+            import requests
+            
+            response = requests.post(
+                'https://api.groq.com/openai/v1/chat/completions',
+                headers={
+                    'Authorization': f"Bearer {os.getenv('GROQ_API_KEY')}",
+                    'Content-Type': 'application/json'
+                },
+                json={
+                    'model': 'llama-3.3-70b-versatile',
+                    'messages': messages,
+                    'temperature': 0.7,
+                    'max_tokens': 1024
+                }
+            )
+            
+            if response.status_code != 200:
+                print(f'Groq API error: {response.text}')
+                raise ValueError(f'Groq API error: {response.status_code}')
+            
+            return jsonify(response.json())
+        
+        # Fallback to OpenAI if available
+        elif os.getenv('OPENAI_API_KEY'):
+            import openai
+            openai.api_key = os.getenv('OPENAI_API_KEY')
+            
+            response = openai.chat.completions.create(
+                model="gpt-4",
+                messages=messages,
+                temperature=0.7,
+                max_tokens=1024
+            )
+            
+            return jsonify({
+                'choices': [{
+                    'message': {
+                        'content': response.choices[0].message.content
+                    }
+                }]
+            })
+        
+        # Mock response if no API keys
+        else:
+            return jsonify({
+                'choices': [{
+                    'message': {
+                        'content': "I'm currently running in demo mode without an API key. To enable AI chat, please add your GROQ_API_KEY or OPENAI_API_KEY to the .env file."
+                    }
+                }]
+            })
+            
+    except Exception as e:
+        print(f'Chat error: {e}')
+        return jsonify({
+            'error': 'Chat request failed',
+            'message': str(e)
+        }), 500
+
 if __name__ == '__main__':
-    api_provider = 'OpenAI' if os.getenv('OPENAI_API_KEY') else 'Anthropic' if os.getenv('ANTHROPIC_API_KEY') else 'Mock'
+    api_provider = 'Groq' if os.getenv('GROQ_API_KEY') else 'OpenAI' if os.getenv('OPENAI_API_KEY') else 'Anthropic' if os.getenv('ANTHROPIC_API_KEY') else 'Mock'
     print('\n✨ Recovery Reflections Server')
     print('📍 http://localhost:8000')
     print(f'🤖 AI: {api_provider}\n')
